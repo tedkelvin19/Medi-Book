@@ -4,6 +4,7 @@ export const doctorsAPI = {
   list:   ()         => api.get('/doctors/'),
   detail: (id)       => api.get(`/doctors/${id}/`),
   create: (data)     => api.post('/doctors/create/', data),
+  update: (id, data) => api.patch(`/doctors/${id}/`, data),
 };
 
 export const appointmentsAPI = {

@@ -18,6 +18,7 @@ import Settings            from './pages/patient/Settings';
 import DoctorDashboard     from './pages/doctor/DoctorDashboard';
 import DoctorSchedule   from './pages/doctor/DoctorSchedule';
 import DoctorPatients   from './pages/doctor/DoctorPatients';
+import DoctorProfile from './pages/doctor/DoctorProfile';
 
 // Admin
 import AdminDashboard      from './pages/admin/AdminDashboard';
@@ -55,6 +56,9 @@ export default function App() {
           {/* Doctor */}
           <Route path="/doctor/dashboard" element={
             <ProtectedRoute role="doctor"><DoctorDashboard /></ProtectedRoute>
+          }/>
+          <Route path="/doctor/profile" element={
+             <ProtectedRoute role="doctor"><DoctorProfile /></ProtectedRoute>
           }/>
           <Route path="/doctor/schedule" element={
             <ProtectedRoute role="doctor"><DoctorSchedule /></ProtectedRoute>
