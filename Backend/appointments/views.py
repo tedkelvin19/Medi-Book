@@ -45,15 +45,29 @@ class AppointmentDetailView(generics.RetrieveUpdateDestroyAPIView):
         if user.role == 'patient':
             return Appointment.objects.filter(patient=user)
         elif user.role == 'doctor':
+            # ✅ Doctor can see appointments for their profile
             return Appointment.objects.filter(doctor__user=user)
-        return Appointment.objects.all()
+        return Appointment.objects.all()  # admin sees all
 
     def perform_update(self, serializer):
-        # Only allow cancel/reschedule — not arbitrary edits
-        allowed = ['cancelled', 'rescheduled', 'confirmed', 'completed']
-        status  = self.request.data.get('status')
-        if status and status not in allowed:
-            raise PermissionDenied("Invalid status update.")
+        user   = self.request.user
+        status = self.request.data.get('status')
+
+        # Define what each role is allowed to do
+        allowed = {
+            'patient': ['cancelled', 'rescheduled'],
+            'doctor':  ['confirmed', 'completed', 'cancelled'],
+            'admin':   ['confirmed', 'completed', 'cancelled', 'pending', 'rescheduled'],
+        }
+
+        role_allowed = allowed.get(user.role, [])
+
+        if status and status not in role_allowed:
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied(
+                f"Your role ({user.role}) cannot set status to '{status}'."
+            )
+
         serializer.save()
 class CreateDoctorProfileView(generics.CreateAPIView):
     serializer_class   = DoctorProfileSerializer

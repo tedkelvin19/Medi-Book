@@ -2,6 +2,7 @@ from rest_framework import serializers
 from .models import DoctorProfile, AvailabilitySlot, Appointment
 from users.serializers import UserSerializer
 
+
 class AvailabilitySlotSerializer(serializers.ModelSerializer):
     class Meta:
         model  = AvailabilitySlot
@@ -14,12 +15,19 @@ class DoctorProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model  = DoctorProfile
-        fields = ['id', 'user', 'specialization', 'bio', 'experience_yrs', 'consultation_fee', 'slots']
+        fields = [
+            'id', 'user', 'specialization', 'bio',
+            'experience_yrs', 'consultation_fee', 'slots'
+        ]
 
 
 class AppointmentSerializer(serializers.ModelSerializer):
-    patient_name = serializers.CharField(source='patient.username', read_only=True)
-    doctor_name  = serializers.CharField(source='doctor.user.username', read_only=True)
+    patient_name = serializers.CharField(
+        source='patient.username', read_only=True
+    )
+    doctor_name = serializers.CharField(
+        source='doctor.user.username', read_only=True
+    )
 
     class Meta:
         model  = Appointment
@@ -28,26 +36,39 @@ class AppointmentSerializer(serializers.ModelSerializer):
             'scheduled_datetime', 'duration_minutes', 'predicted_duration',
             'status', 'notes', 'created_at', 'updated_at'
         ]
-        read_only_fields = ['patient', 'predicted_duration', 'created_at', 'updated_at']
+        read_only_fields = [
+            'patient', 'predicted_duration', 'created_at', 'updated_at'
+        ]
 
     def validate(self, data):
-        # Conflict detection — block double booking
-        doctor = data.get('doctor')
+        # Skip conflict check if only updating status
+        if list(data.keys()) == ['status']:
+            return data
+
+        # Skip if no doctor or scheduled time provided
+        doctor    = data.get('doctor')
         scheduled = data.get('scheduled_datetime')
+
+        if not doctor or not scheduled:
+            return data
+
+        # Conflict detection
         duration = data.get('duration_minutes', 30)
 
-        from django.utils import timezone
         from datetime import timedelta
-
         end_time = scheduled + timedelta(minutes=duration)
 
         conflict = Appointment.objects.filter(
             doctor=doctor,
             status__in=['pending', 'confirmed'],
             scheduled_datetime__lt=end_time,
-        ).exclude(pk=self.instance.pk if self.instance else None)
+        ).exclude(
+            pk=self.instance.pk if self.instance else None
+        )
 
         if conflict.exists():
-            raise serializers.ValidationError("This doctor already has an appointment in that time slot.")
+            raise serializers.ValidationError(
+                "This doctor already has an appointment in that time slot."
+            )
 
         return data
