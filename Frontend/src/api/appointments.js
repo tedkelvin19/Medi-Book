@@ -12,3 +12,13 @@ export const appointmentsAPI = {
   update: (id, data) => api.patch(`/appointments/${id}/`, data),
   delete: (id)       => api.delete(`/appointments/${id}/`),
 };
+
+// ✅ Admin only API calls
+export const adminAPI = {
+  stats:        ()         => api.get('/auth/admin/stats/'),
+  users:        ()         => api.get('/auth/admin/users/'),
+  deleteUser:   (id)       => api.delete(`/auth/admin/users/${id}/`),
+  updateUser:   (id, data) => api.patch(`/auth/admin/users/${id}/`, data),
+  auditLogs:    ()         => api.get('/audit/'),
+  userAppointments: (id)       => api.get(`/auth/admin/users/${id}/appointments/`),
+};

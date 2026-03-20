@@ -63,8 +63,14 @@ export default function App() {
             <ProtectedRoute role="doctor"><DoctorPatients /></ProtectedRoute>
           }/>
 
-          {/* Admin */}
+          {/* Admin routes — all protected with role="admin" */}
           <Route path="/admin" element={
+            <ProtectedRoute role="admin"><AdminDashboard /></ProtectedRoute>
+          }/>
+          <Route path="/admin/users" element={
+            <ProtectedRoute role="admin"><AdminDashboard /></ProtectedRoute>
+          }/>
+          <Route path="/admin/audit" element={
             <ProtectedRoute role="admin"><AdminDashboard /></ProtectedRoute>
           }/>
 
