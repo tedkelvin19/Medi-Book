@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import DoctorProfile, AvailabilitySlot, Appointment
+from .models import DoctorProfile, AvailabilitySlot, Appointment, AppointmentRating
 from users.serializers import UserSerializer
 
 
@@ -40,35 +40,59 @@ class AppointmentSerializer(serializers.ModelSerializer):
             'patient', 'predicted_duration', 'created_at', 'updated_at'
         ]
 
-    def validate(self, data):
+        def validate(self, data):
         # Skip conflict check if only updating status
-        if list(data.keys()) == ['status']:
-            return data
+            if list(data.keys()) == ['status']:
+                return data
 
-        # Skip if no doctor or scheduled time provided
-        doctor    = data.get('doctor')
-        scheduled = data.get('scheduled_datetime')
+            # Skip if no doctor or scheduled time provided
+            doctor    = data.get('doctor')
+            scheduled = data.get('scheduled_datetime')
 
-        if not doctor or not scheduled:
-            return data
+            if not doctor or not scheduled:
+                return data
 
-        # Conflict detection
-        duration = data.get('duration_minutes', 30)
+            duration = data.get('duration_minutes', 30)
 
-        from datetime import timedelta
-        end_time = scheduled + timedelta(minutes=duration)
+            from datetime import timedelta
 
-        conflict = Appointment.objects.filter(
-            doctor=doctor,
-            status__in=['pending', 'confirmed'],
-            scheduled_datetime__lt=end_time,
-        ).exclude(
-            pk=self.instance.pk if self.instance else None
-        )
+            new_start = scheduled
+            new_end   = scheduled + timedelta(minutes=duration)
 
-        if conflict.exists():
-            raise serializers.ValidationError(
-                "This doctor already has an appointment in that time slot."
+            # Get existing appointments for this doctor
+            existing = Appointment.objects.filter(
+                doctor=doctor,
+                status__in=['pending', 'confirmed'],
+            ).exclude(
+                pk=self.instance.pk if self.instance else None
             )
 
-        return data
+            # Check for actual time overlap
+            for appt in existing:
+                existing_start = appt.scheduled_datetime
+                existing_end   = existing_start + timedelta(
+                    minutes=appt.duration_minutes or 30
+                )
+
+                # Overlap condition:
+                # new starts before existing ends AND new ends after existing starts
+                if new_start < existing_end and new_end > existing_start:
+                    raise serializers.ValidationError(
+                        f"This doctor already has an appointment from "
+                        f"{existing_start.strftime('%H:%M')} to "
+                        f"{existing_end.strftime('%H:%M')} on that day. "
+                        f"Please choose a different time."
+                    )
+
+                    return data
+
+class AppointmentRatingSerializer(serializers.ModelSerializer):
+    class Meta:
+        model  = AppointmentRating
+        fields = ['id', 'appointment', 'score', 'comment', 'created_at']
+        read_only_fields = ['patient', 'doctor', 'created_at']
+
+    def validate_score(self, value):
+        if not 1 <= value <= 5:
+            raise serializers.ValidationError("Score must be between 1 and 5.")
+        return value        

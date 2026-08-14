@@ -1,7 +1,12 @@
 from rest_framework import generics, permissions, filters
 from rest_framework.exceptions import PermissionDenied
-from .models import DoctorProfile, Appointment
-from .serializers import DoctorProfileSerializer, AppointmentSerializer
+from .models import DoctorProfile, AvailabilitySlot, Appointment, AppointmentRating
+from .serializers import (
+    DoctorProfileSerializer,
+    AvailabilitySlotSerializer,
+    AppointmentSerializer,
+    AppointmentRatingSerializer,
+)
 
 
 # ── Doctor Profiles ──────────────────────────────────────────────────────────
@@ -74,4 +79,85 @@ class CreateDoctorProfileView(generics.CreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user)      
+        serializer.save(user=self.request.user)    
+class AvailabilitySlotListCreateView(generics.ListCreateAPIView):
+    serializer_class   = AvailabilitySlotSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.role == 'doctor':
+            return AvailabilitySlot.objects.filter(
+                doctor__user=user
+            ).order_by('day', 'start_time')
+        return AvailabilitySlot.objects.none()
+
+    def perform_create(self, serializer):
+        try:
+            doctor = DoctorProfile.objects.get(user=self.request.user)
+        except DoctorProfile.DoesNotExist:
+            from rest_framework.exceptions import ValidationError
+            raise ValidationError("You must create a doctor profile first.")
+
+        # Check for duplicate slot on same day with same times
+        day        = serializer.validated_data.get('day')
+        start_time = serializer.validated_data.get('start_time')
+        end_time   = serializer.validated_data.get('end_time')
+
+        duplicate = AvailabilitySlot.objects.filter(
+            doctor=doctor,
+            day=day,
+            start_time=start_time,
+            end_time=end_time,
+        ).exists()
+
+        if duplicate:
+            from rest_framework.exceptions import ValidationError
+            raise ValidationError(
+                "This slot already exists for this day."
+            )
+
+        serializer.save(doctor=doctor)
+
+class AvailabilitySlotDetailView(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class   = AvailabilitySlotSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return AvailabilitySlot.objects.filter(
+            doctor__user=self.request.user
+        )
+
+
+
+class AppointmentRatingView(generics.CreateAPIView):
+    serializer_class   = AppointmentRatingSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def perform_create(self, serializer):
+        appointment_id = self.kwargs['pk']
+        try:
+            appt = Appointment.objects.get(
+                pk=appointment_id,
+                patient=self.request.user,
+                status='completed'
+            )
+        except Appointment.DoesNotExist:
+            from rest_framework.exceptions import ValidationError
+            raise ValidationError(
+                "You can only rate completed appointments."
+            )
+
+        # Check not already rated
+        if hasattr(appt, 'rating'):
+            from rest_framework.exceptions import ValidationError
+            raise ValidationError(
+                "You have already rated this appointment."
+            )
+
+        serializer.save(
+            patient=self.request.user,
+            doctor=appt.doctor,
+            appointment=appt,
+        )
+          

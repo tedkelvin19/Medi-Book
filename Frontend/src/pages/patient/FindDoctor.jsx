@@ -153,7 +153,7 @@ export default function FindDoctor() {
   }, [search, specialty, doctors]);
 
   const handleBook = (doctor) => {
-    navigate(`/book/${doctor.id}`);
+    navigate(`/doctors/${doctor.id}`);
   };
 
   return (

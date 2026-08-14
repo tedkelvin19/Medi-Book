@@ -137,6 +137,12 @@ export default function BookAppointment() {
               className="flex-1 py-2.5 border-2 border-slate-200 hover:border-teal-300 text-slate-600 text-sm font-semibold rounded-xl transition-colors">
               Book Another
             </button>
+            {/* Print receipt button */}
+            <button
+              onClick={() => window.print()}
+              className="w-full py-2.5 border-2 border-slate-200 text-slate-600 text-sm font-semibold rounded-xl hover:border-teal-300 transition-colors flex items-center justify-center gap-2">
+              🖨️ Print Receipt
+            </button>
           </div>
         </div>
       </div>

@@ -14,6 +14,7 @@ const doctorLinks = [
   { to: '/doctor/profile',   label: 'My Profile',  icon: '👤' },
   { to: '/doctor/schedule',  label: 'My Schedule', icon: '📅' },
   { to: '/doctor/patients',  label: 'Patients',    icon: '👥' },
+  { to: '/doctor/availability', label: 'Availability', icon: '🕐' },
   { to: '/settings',         label: 'Settings',    icon: '⚙'  },
 ];
 

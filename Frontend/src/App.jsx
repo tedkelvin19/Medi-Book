@@ -13,12 +13,15 @@ import BookAppointment     from './pages/patient/BookAppointment';
 import AppointmentsList    from './pages/patient/AppointmentsList';
 import Reminders           from './pages/patient/Reminders';
 import Settings            from './pages/patient/Settings';
+import DoctorProfileView   from './pages/patient/DoctorProfileView';
 
 // Doctor
 import DoctorDashboard     from './pages/doctor/DoctorDashboard';
 import DoctorSchedule   from './pages/doctor/DoctorSchedule';
 import DoctorPatients   from './pages/doctor/DoctorPatients';
 import DoctorProfile from './pages/doctor/DoctorProfile';
+import DoctorAvailability  from './pages/doctor/DoctorAvailability';
+
 
 // Admin
 import AdminDashboard      from './pages/admin/AdminDashboard';
@@ -52,6 +55,10 @@ export default function App() {
           <Route path="/settings" element={
             <ProtectedRoute><Settings /></ProtectedRoute>
           }/>
+          {/* Patient views doctor profile */}
+          <Route path="/doctors/:doctorId" element={
+            <ProtectedRoute role="patient"><DoctorProfileView /></ProtectedRoute>
+          }/>
 
           {/* Doctor */}
           <Route path="/doctor/dashboard" element={
@@ -65,6 +72,10 @@ export default function App() {
           }/>
           <Route path="/doctor/patients" element={
             <ProtectedRoute role="doctor"><DoctorPatients /></ProtectedRoute>
+          }/>
+          {/* Doctor availability */}
+          <Route path="/doctor/availability" element={
+            <ProtectedRoute role="doctor"><DoctorAvailability /></ProtectedRoute>
           }/>
 
           {/* Admin routes — all protected with role="admin" */}

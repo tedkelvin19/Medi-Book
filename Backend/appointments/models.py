@@ -60,3 +60,29 @@ class Appointment(models.Model):
 
     def __str__(self):
         return f"{self.patient.username} → {self.doctor} @ {self.scheduled_datetime}"
+        
+class AppointmentRating(models.Model):
+    appointment = models.OneToOneField(
+        Appointment,
+        on_delete=models.CASCADE,
+        related_name='rating'
+    )
+    patient     = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='ratings_given'
+    )
+    doctor      = models.ForeignKey(
+        DoctorProfile,
+        on_delete=models.CASCADE,
+        related_name='ratings_received'
+    )
+    score       = models.PositiveIntegerField()  # 1–5
+    comment     = models.TextField(blank=True)
+    created_at  = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.patient.username} rated {self.doctor} → {self.score}/5"

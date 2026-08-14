@@ -9,3 +9,18 @@
     @apply bg-slate-50 text-slate-800 font-sans;
   }
 }*/
+
+
+@media print {
+  /* Hide everything except the receipt */
+  nav, aside, header, button, .no-print {
+    display: none !important;
+  }
+  body {
+    background: white !important;
+  }
+  .print-receipt {
+    display: block !important;
+    padding: 40px;
+  }
+}

@@ -29,7 +29,7 @@ const STATUS_STYLES = {
 // ══════════════════════════════════════════════════════════════════════════
 // USER DETAIL MODAL
 // ══════════════════════════════════════════════════════════════════════════
-function UserDetailModal({ user, onClose }) {
+function UserDetailModal({ user, onClose, onRoleChange }) {
   const [appointments, setAppointments] = useState([]);
   const [loading,      setLoading]      = useState(true);
   const [activeTab,    setActiveTab]    = useState('details');
@@ -267,12 +267,38 @@ function UserDetailModal({ user, onClose }) {
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-slate-100 flex-shrink-0">
-          <button onClick={onClose}
-            className="w-full py-2.5 border-2 border-slate-200 text-slate-600 text-sm font-semibold rounded-xl hover:border-slate-300 transition-colors">
-            Close
+        <div className="px-6 py-4 border-t border-slate-100 flex-shrink-0 space-y-3">
+
+  {/* Role change — only show for non-admin users */}
+  {activeTab === 'details' && user.role !== 'admin' && (
+    <div>
+      <p className="text-xs font-semibold text-slate-500 mb-2">
+        Change Role
+      </p>
+      <div className="flex gap-2">
+        {['patient','doctor','admin'].filter(r => r !== user.role).map(role => (
+          <button
+            key={role}
+            onClick={() => onRoleChange(user.id, role)}
+            className={`flex-1 py-2 text-xs font-semibold rounded-xl border-2 capitalize transition-all
+              ${role === 'admin'
+                ? 'border-red-300 text-red-600 hover:bg-red-50'
+                : role === 'doctor'
+                ? 'border-indigo-300 text-indigo-600 hover:bg-indigo-50'
+                : 'border-teal-300 text-teal-600 hover:bg-teal-50'
+              }`}>
+            Make {role}
           </button>
-        </div>
+        ))}
+      </div>
+    </div>
+  )}
+
+  <button onClick={onClose}
+    className="w-full py-2.5 border-2 border-slate-200 text-slate-600 text-sm font-semibold rounded-xl hover:border-slate-300 transition-colors">
+    Close
+  </button>
+</div>
       </div>
     </div>
   );
@@ -349,6 +375,22 @@ export default function AdminDashboard() {
       setDeleting(null);
     }
   };
+  const handleRoleChange = async (id, newRole) => {
+  if (!window.confirm(
+    `Change this user's role to "${newRole}"?`
+  )) return;
+  try {
+    await adminAPI.updateUser(id, { role: newRole });
+    setUsers(prev =>
+      prev.map(u => u.id === id ? { ...u, role: newRole } : u)
+    );
+    setSelectedUser(prev =>
+      prev?.id === id ? { ...prev, role: newRole } : prev
+    );
+  } catch {
+    alert('Failed to change role.');
+  }
+};
 
   const filteredUsers = users.filter(u =>
     u.username?.toLowerCase().includes(search.toLowerCase()) ||
@@ -367,10 +409,10 @@ export default function AdminDashboard() {
 
       {/* User detail modal */}
       <UserDetailModal
-        user={selectedUser}
-        onClose={() => setSelectedUser(null)}
+         user={selectedUser}
+         onClose={() => setSelectedUser(null)}
+         onRoleChange={handleRoleChange}
       />
-
       {/* Admin badge */}
       <div className="flex items-center gap-3 mb-6 flex-wrap">
         <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-xl px-4 py-2">
