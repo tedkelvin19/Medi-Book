@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { appointmentsAPI }     from '../../api/appointments';
 import Layout                  from '../../components/Layout';
 
@@ -16,18 +17,43 @@ const STATUS_STYLES = {
 };
 
 export default function DoctorSchedule() {
+  const [searchParams] = useSearchParams();
+  const notificationAppointmentId =
+  searchParams.get('appointment');
   const [appointments, setAppointments] = useState([]);
   const [loading,      setLoading]      = useState(true);
   const [selectedDate, setSelectedDate] = useState(
     new Date().toISOString().split('T')[0]
   );
+useEffect(() => {
+  appointmentsAPI.list()
+    .then(res => {
+      const data = res.data || [];
 
-  useEffect(() => {
-    appointmentsAPI.list()
-      .then(res  => setAppointments(res.data))
-      .catch(console.error)
-      .finally(() => setLoading(false));
-  }, []);
+      setAppointments(data);
+
+      // If opened from a notification,
+      // automatically select that appointment's date.
+      if (notificationAppointmentId) {
+
+        const appointment = data.find(
+          a =>
+            String(a.id) ===
+            String(notificationAppointmentId)
+        );
+
+        if (appointment?.scheduled_datetime) {
+          setSelectedDate(
+            appointment.scheduled_datetime.split('T')[0]
+          );
+        }
+      }
+    })
+    .catch(console.error)
+    .finally(() => {
+      setLoading(false);
+    });
+}, [notificationAppointmentId]);
 
   // Get week days around selected date
   const getWeekDays = () => {

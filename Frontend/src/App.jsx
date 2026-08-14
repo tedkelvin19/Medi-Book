@@ -14,6 +14,7 @@ import AppointmentsList    from './pages/patient/AppointmentsList';
 import Reminders           from './pages/patient/Reminders';
 import Settings            from './pages/patient/Settings';
 import DoctorProfileView   from './pages/patient/DoctorProfileView';
+import Payments from './pages/patient/Payments';
 
 // Doctor
 import DoctorDashboard     from './pages/doctor/DoctorDashboard';
@@ -48,6 +49,9 @@ export default function App() {
           }/>
           <Route path="/appointments" element={
             <ProtectedRoute role="patient"><AppointmentsList /></ProtectedRoute>
+          }/>
+          <Route path="/payments" element={
+            <ProtectedRoute role="patient"><Payments /></ProtectedRoute>
           }/>
           <Route path="/reminders" element={
             <ProtectedRoute role="patient"><Reminders /></ProtectedRoute>

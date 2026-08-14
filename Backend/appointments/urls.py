@@ -8,6 +8,10 @@ from .views import (
     AvailabilitySlotListCreateView,
     AvailabilitySlotDetailView,
     AppointmentRatingView,
+    NotificationListView,
+    NotificationMarkReadView,
+    PaymentListCreateView,
+    PaymentDetailView
 )
 
 urlpatterns = [
@@ -19,4 +23,9 @@ urlpatterns = [
     path('appointments/<int:pk>/rate/', AppointmentRatingView.as_view(),   name='appointment-rate'),
     path('availability/',              AvailabilitySlotListCreateView.as_view(),name='availability-list'),
     path('availability/<int:pk>/',     AvailabilitySlotDetailView.as_view(),    name='availability-detail'),
+    path('notifications/',                NotificationListView.as_view(),           name='notifications'),
+    path('notifications/read/',           NotificationMarkReadView.as_view(),       name='notifications-read-all'),
+    path('notifications/<int:pk>/read/',  NotificationMarkReadView.as_view(),       name='notifications-read-one'),
+    path('payments/',                     PaymentListCreateView.as_view(),          name='payment-list'),
+    path('payments/<int:pk>/',            PaymentDetailView.as_view(),              name='payment-detail'),
 ]

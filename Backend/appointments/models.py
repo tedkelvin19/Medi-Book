@@ -86,3 +86,90 @@ class AppointmentRating(models.Model):
 
     def __str__(self):
         return f"{self.patient.username} rated {self.doctor} → {self.score}/5"
+
+class Notification(models.Model):
+    class Type(models.TextChoices):
+        NEW_BOOKING = 'new_booking', 'New Booking'
+        CONFIRMED = 'confirmed', 'Appointment Confirmed'
+        CANCELLED = 'cancelled', 'Appointment Cancelled'
+        RESCHEDULED = 'rescheduled', 'Rescheduled'
+        REMINDER = 'reminder', 'Reminder'
+        PAYMENT = 'payment', 'Payment'
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='notifications'
+    )
+
+    appointment = models.ForeignKey(
+        Appointment,
+        on_delete=models.CASCADE,
+        related_name='notifications',
+        null=True,
+        blank=True
+    )
+
+    type = models.CharField(
+        max_length=20,
+        choices=Type.choices
+    )
+
+    title = models.CharField(max_length=200)
+
+    message = models.TextField()
+
+    is_read = models.BooleanField(default=False)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.user.username} — {self.title}"
+
+class Payment(models.Model):
+    class Status(models.TextChoices):
+        PENDING   = 'pending',   'Pending'
+        COMPLETED = 'completed', 'Completed'
+        FAILED    = 'failed',    'Failed'
+        REFUNDED  = 'refunded',  'Refunded'
+
+    class Method(models.TextChoices):
+        MPESA      = 'mpesa',      'M-Pesa'
+        CARD       = 'card',       'Card'
+        CASH       = 'cash',       'Cash'
+        INSURANCE  = 'insurance',  'Insurance'
+
+    appointment     = models.OneToOneField(
+        Appointment,
+        on_delete=models.CASCADE,
+        related_name='payment'
+    )
+    patient         = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='payments'
+    )
+    amount          = models.DecimalField(max_digits=10, decimal_places=2)
+    method          = models.CharField(
+        max_length=20,
+        choices=Method.choices,
+        default=Method.MPESA
+    )
+    status          = models.CharField(
+        max_length=20,
+        choices=Status.choices,
+        default=Status.PENDING
+    )
+    transaction_id  = models.CharField(max_length=100, blank=True)
+    paid_at         = models.DateTimeField(null=True, blank=True)
+    created_at      = models.DateTimeField(auto_now_add=True)
+    notes           = models.TextField(blank=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Payment #{self.id} — {self.patient.username} — KSh {self.amount}"        

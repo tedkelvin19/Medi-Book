@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import DoctorProfile, AvailabilitySlot, Appointment, AppointmentRating
+from .models import DoctorProfile, AvailabilitySlot, Appointment, AppointmentRating, Payment
 from users.serializers import UserSerializer
 
 
@@ -28,13 +28,20 @@ class AppointmentSerializer(serializers.ModelSerializer):
     doctor_name = serializers.CharField(
         source='doctor.user.username', read_only=True
     )
+    consultation_fee = serializers.DecimalField(
+        source='doctor.consultation_fee',
+        max_digits=10, decimal_places=2,
+        read_only=True
+    )
 
     class Meta:
         model  = Appointment
         fields = [
-            'id', 'patient', 'patient_name', 'doctor', 'doctor_name',
-            'scheduled_datetime', 'duration_minutes', 'predicted_duration',
-            'status', 'notes', 'created_at', 'updated_at'
+            'id', 'patient', 'patient_name', 
+            'doctor', 'doctor_name', 'consultation_fee',
+            'scheduled_datetime', 'duration_minutes', 
+            'predicted_duration','status', 'notes', 
+            'created_at', 'updated_at'
         ]
         read_only_fields = [
             'patient', 'predicted_duration', 'created_at', 'updated_at'
@@ -96,3 +103,28 @@ class AppointmentRatingSerializer(serializers.ModelSerializer):
         if not 1 <= value <= 5:
             raise serializers.ValidationError("Score must be between 1 and 5.")
         return value        
+
+class PaymentSerializer(serializers.ModelSerializer):
+    patient_name = serializers.CharField(
+        source='patient.username', read_only=True
+    )
+    doctor_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model  = Payment
+        fields = [
+            'id', 'appointment', 'patient', 'patient_name',
+            'doctor_name', 'amount', 'method', 'status',
+            'transaction_id', 'paid_at', 'created_at', 'notes'
+        ]
+        read_only_fields = [
+            'patient', 'amount',        # ✅ amount set by view
+            'status', 'paid_at',
+            'created_at'
+        ]
+
+    def get_doctor_name(self, obj):
+        try:
+            return obj.appointment.doctor.user.username
+        except Exception:
+            return ''

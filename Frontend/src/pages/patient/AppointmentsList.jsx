@@ -3,6 +3,7 @@ import { useNavigate }         from 'react-router-dom';
 import { appointmentsAPI }     from '../../api/appointments';
 import Layout                  from '../../components/Layout';
 import RatingModal from '../../components/RatingModal';
+import PaymentModal from '../../components/PaymentModal';
 
 const AVATAR_COLORS = [
   'bg-teal-500','bg-indigo-500','bg-pink-500',
@@ -27,6 +28,7 @@ export default function AppointmentsList() {
   const [dateTo,       setDateTo]       = useState('');
   const [showFilters,  setShowFilters]  = useState(false);
   const [ratingAppt, setRatingAppt] = useState(null);
+  const [payAppt, setPayAppt] = useState(null);
 
   useEffect(() => {
     appointmentsAPI.list()
@@ -312,6 +314,23 @@ export default function AppointmentsList() {
                         Cancel
                       </button>
                     )}
+                    {/* Pay button for confirmed appointments without payment */}
+                    {appt.status === 'confirmed' && !appt.payment && (
+                      <button
+                        // When clicking Pay button:
+                        onClick={() => setPayAppt({
+                          ...appt,
+                          consultation_fee: 1500  // We'll get real fee from doctor profile
+                        })}
+                        className="text-xs text-teal-600 hover:text-teal-700 hover:bg-teal-50 px-2.5 py-1.5 rounded-lg border border-teal-200 transition-all flex-shrink-0">
+                        💳 Pay
+                      </button>
+                    )}
+                    {appt.status === 'confirmed' && appt.payment && (
+                      <span className="text-xs text-green-600 font-semibold flex-shrink-0">
+                        ✅ Paid
+                      </span>
+                    )}
                     {/* Rate button for completed appointments */}
                     {appt.status === 'completed' && !appt.rating && (
                       <button
@@ -336,10 +355,18 @@ export default function AppointmentsList() {
         onClose={() => setRatingAppt(null)}
         onRated={() => {
         setRatingAppt(null);
-        // Refresh appointments
-        appointmentsAPI.list().then(res => setAppointments(res.data));
-      }}
-/>
+          // Refresh appointments
+          appointmentsAPI.list().then(res => setAppointments(res.data));
+        }}
+      />
+      <PaymentModal
+        appointment={payAppt}
+        onClose={() => setPayAppt(null)}
+        onPaid={() => {
+          setPayAppt(null);
+          appointmentsAPI.list().then(res => setAppointments(res.data));
+        }}
+      />
     </Layout>
   );
 }

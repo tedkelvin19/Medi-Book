@@ -32,3 +32,15 @@ export const availabilityAPI = {
   update: (id, data) => api.patch(`/availability/${id}/`, data),
   delete: (id)       => api.delete(`/availability/${id}/`),
 };
+
+export const notificationsAPI = {
+  list:       ()   => api.get('/notifications/'),
+  markRead:   (id) => api.post(`/notifications/${id}/read/`),
+  markAllRead:()   => api.post('/notifications/read/'),
+};
+
+export const paymentsAPI = {
+  list:   ()         => api.get('/payments/'),
+  create: (data)     => api.post('/payments/', data),
+  detail: (id)       => api.get(`/payments/${id}/`),
+};

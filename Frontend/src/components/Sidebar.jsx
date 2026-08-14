@@ -5,8 +5,10 @@ const patientLinks = [
   { to: '/dashboard',    label: 'Dashboard',   icon: '⊞' },
   { to: '/doctors',      label: 'Find Doctor', icon: '🔍' },
   { to: '/appointments', label: 'Appointments',icon: '📅' },
+  { to: '/payments',     label: 'Payments',     icon: '💳' },
   { to: '/reminders',    label: 'Reminders',   icon: '🔔' },
   { to: '/settings',     label: 'Settings',    icon: '⚙'  },
+
 ];
 
 const doctorLinks = [
